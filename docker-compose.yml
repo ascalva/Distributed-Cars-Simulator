@@ -1,0 +1,22 @@
+version: "3.1"
+
+services:
+    simulator:
+        restart: always
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: simulator
+        image: simulator
+        ports:
+            - "5000:5000"
+        volumes:
+            - ./:/app
+        tty:
+            true
+        networks:
+            - local_net
+
+networks:
+    local_net:
+        external: false
