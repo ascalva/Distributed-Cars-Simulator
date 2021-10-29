@@ -1,21 +1,29 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from src   import app
 
 
 actions = Blueprint("actions", __name__, url_prefix="/actions")
 
 
-@actions.route("/actions/login", methods=["GET", "POST"], strict_slashes=False)
+@actions.route("/login", methods=["GET", "POST"], strict_slashes=False)
 def client_login() :
-    return ""
+    client_id = request.form.get("id")
+    client_ip = request.remote_addr
+
+    # TODO: Create user (assign position?)
+
+    return jsonify({
+        "status"  : "ok",
+        "message" : f"will create new account for {client_id} at {client_ip}"
+    })
 
 
-@actions.route("/actions/getNeighbors", methods=["GET"], strict_slashes=False)
+@actions.route("/getNeighbors", methods=["GET"], strict_slashes=False)
 def getNeighbors() :
     return jsonify([])
 
 
-@actions.route("/actions/move", methods=["GET", "POST"], strict_slashes=False)
+@actions.route("/move", methods=["GET", "POST"], strict_slashes=False)
 def move() :
     return jsonify({
         "front" : 0,
