@@ -5,7 +5,7 @@ services:
         restart: always
         build:
             context: .
-            dockerfile: Dockerfile
+            dockerfile: ./docker-files/Dockerfile
         container_name: simulator
         image: simulator
         ports:
@@ -17,7 +17,19 @@ services:
         networks:
             - local_net
 
-    # TODO: Add containers here to simulate individual cars.
+    client-1:
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker-files/Dockerfile.client
+        container_name: client-1
+        image: client-1
+        command: sh -c "sleep 5; python3 src/client/car.py"
+        volumes:
+            - ./:/app
+        tty: true
+        networks:
+            - local_net
 
 networks:
     local_net:
