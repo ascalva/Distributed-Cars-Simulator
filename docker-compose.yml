@@ -1,13 +1,16 @@
 version: "3.1"
 
 services:
-    # server-db:
-    #     restart: always
-    #     image: keinos/sqlite3:latest
-    #     container_name: server-db
-    #     tty: true
-    #     networks:
-    #         - local_net
+    sim-database:
+        image: postgres:latest
+        container_name: sim-database
+        restart: always
+        environment:
+            POSTGRES_PASSWORD: mysecretpassword
+            POSTGRES_DB: simulator-database
+        tty: true
+        networks:
+            - local_net
 
     simulator:
         restart: always
@@ -20,6 +23,13 @@ services:
             - "5000:5000"
         volumes:
             - ./:/app
+        environment:
+            RDS_ENGINE:   postgresql
+            RDS_HOSTNAME: sim-database
+            RDS_USERNAME: postgres
+            RDS_PASSWORD: mysecretpassword
+            RDS_PORT:     5432
+            RDS_DB_NAME:  simulator-database
         tty:
             true
         networks:
