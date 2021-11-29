@@ -1,6 +1,14 @@
 version: "3.1"
 
 services:
+    # server-db:
+    #     restart: always
+    #     image: keinos/sqlite3:latest
+    #     container_name: server-db
+    #     tty: true
+    #     networks:
+    #         - local_net
+
     simulator:
         restart: always
         build:
