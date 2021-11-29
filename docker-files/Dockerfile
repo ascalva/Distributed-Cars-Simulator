@@ -14,6 +14,8 @@ RUN apt-get update -y && \
         curl \
         sudo
 
+RUN apt-get install -y --reinstall libpq-dev
+
 COPY ./requirements.txt /tmp/
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 RUN pip3 install gunicorn
@@ -22,16 +24,16 @@ RUN pip3 install gunicorn
 EXPOSE 5000
 
 # Create system user group and add new user.
-RUN groupadd -r sim_user && useradd -r -s /bin/false -g sim_user sim_user
+# RUN groupadd -r sim_user && useradd -r -s /bin/false -g sim_user sim_user
 
 # Make new user owner of project directory.
 RUN mkdir /app
 WORKDIR   /app
 # COPY .    /app
 
-RUN chown -R sim_user:sim_user /app
+# RUN chown -R sim_user:sim_user /app
 
 # Switch to non-root user after setup and installations.
-USER sim_user
+# USER sim_user
 
 CMD ["python3", "flask_app.py"]
