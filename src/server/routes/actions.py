@@ -1,5 +1,5 @@
 from flask                  import Blueprint, jsonify, request
-from flask_login            import current_user
+from flask_login            import current_user, login_user, logout_user, login_required
 from src.server             import app, db
 from src.server.models.user import User
 
@@ -13,7 +13,7 @@ def client_login() :
     client_ip = request.remote_addr
 
     # TODO: Create user (assign position?)
-    if (u := User.query.filter(User.client_id == client_id).first()) is None :
+    if (u := User.query.filter(User.id == client_id).first()) is None :
         u = User(client_id, client_ip)
 
         db.session.add(u)
@@ -26,8 +26,12 @@ def client_login() :
 
     else:
         print("user exists")
-        pos_x, pos_y = u.getPosition()
+        pos_x, pos_y = u.position
         message      = "User already exists."
+
+
+    # TODO: A
+    login_user(u)
 
     return jsonify({
         "status"     : "ok",
@@ -39,10 +43,10 @@ def client_login() :
 
 @actions.route("/getNeighbors", methods=["GET"], strict_slashes=False)
 def getNeighbors() :
-    users = User.query.filter(User.client_id != current_user_client_id).all()
+    users = User.query.filter(User.id != current_user.id).all()
 
     # TODO: Temporarily return all other users (broadcast).
-    return jsonify({c.client_id : c.client_ip for c in users})
+    return jsonify({c.id : c.client_ip for c in users})
 
 
 @actions.route("/move", methods=["POST"], strict_slashes=False)
