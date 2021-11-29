@@ -5,6 +5,13 @@ from src.server.models import User, Obstacle
 
 
 def is_empty(x: int, y: int) -> bool :
+    """
+    Check if a space on the board is empty (no cars or obstacles).
+
+    :param x: x-position
+    :param y: y-position
+    :return:  Boolean indicating if space is empty.
+    """
     users = db.session.query(User) \
         .filter(User.position_x == x) \
         .filter(User.position_y == y) \
@@ -19,6 +26,12 @@ def is_empty(x: int, y: int) -> bool :
 
 
 def get_empty_space() -> Tuple[int, int]:
+    """
+    Continuously generates a random position along the board until
+    an empty space is found (no cars or obstacles).
+
+    :return: Tuple containing x- and y-position.
+    """
     board_height, board_width = app.config["BOARD_DIMS"]
 
     # Keep generating new position until an empty space is found.
@@ -33,19 +46,38 @@ def get_empty_space() -> Tuple[int, int]:
 
 
 def proper_move(x_old: int, y_old: int, x_new: int, y_new: int) -> bool :
+    """
+    Check if car move is accepted, must satisfy:
+        - Car only moves one unit in one direction.
+        - Car is within boundary.
+
+    :param x_old: Old x-position.
+    :param y_old: Old y-position.
+    :param x_new: New x-position.
+    :param y_new: New y-position.
+    :return:      Boolean indicating if move is possible.
+    """
     dx = abs(x_new - x_old)
     dy = abs(y_new - y_old)
 
-    # TODO: Needs to allow for zero movement.
-    return (dx != dy) and (dx + dy == 1)
+    # Can only displace a max of one unit in one direction.
+    # TODO: Check if board boundary is crossed.
+    return (not (dx and dy)) and (dx + dy <= 1)
 
 
 def get_sensor_data(x: int, y: int) -> Dict[str, bool]:
+    """
+    Get sensor data about a point on the board.
+
+    :param x: x-position
+    :param y: y-position
+    :return:  1 if there is 'something', 0 if space is empty.
+    """
     return {
-        "left"  : is_empty(x-1, y),
-        "right" : is_empty(x+1, y),
-        "up"    : is_empty(x, y-1),
-        "down"  : is_empty(x, y+1)
+        "left"  : not is_empty(x-1, y),
+        "right" : not is_empty(x+1, y),
+        "up"    : not is_empty(x, y-1),
+        "down"  : not is_empty(x, y+1)
     }
 
 
