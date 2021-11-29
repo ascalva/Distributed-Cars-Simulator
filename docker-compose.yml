@@ -45,6 +45,28 @@ services:
         command: sh -c "sleep 5; python3 src/client/car.py"
         volumes:
             - ./:/app
+        environment:
+            CLIENT_ID: client-1
+            HOSTNAME:  simulator
+            PORT:      5000
+        tty: true
+        networks:
+            - local_net
+
+    client-2:
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker-files/Dockerfile.client
+        container_name: client-2
+        image: client-2
+        command: sh -c "sleep 6; python3 src/client/car.py"
+        volumes:
+            - ./:/app
+        environment:
+            CLIENT_ID: client-2
+            HOSTNAME:  simulator
+            PORT:      5000
         tty: true
         networks:
             - local_net
