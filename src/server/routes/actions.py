@@ -10,6 +10,15 @@ actions = Blueprint("actions", __name__, url_prefix="/actions")
 
 @actions.route("/login", methods=["GET", "POST"], strict_slashes=False)
 def client_login() :
+    """
+    Entrypoint for clients/cars, establishes "connection" with board
+    simulator. If entry for client with same ID exists, recorded
+    position is returned. If client has never been seen, a new position
+    is randomly generated and returned. User object is created for client.
+
+    :param client_id: ID supplied by client, should be a unique identifier.
+    :return:          JSON object containing position of client.
+    """
     client_id = request.form.get("id")
     client_ip = request.remote_addr
 
@@ -39,15 +48,37 @@ def client_login() :
 
 @actions.route("/getNeighbors", methods=["GET", "POST"], strict_slashes=False)
 def getNeighbors() :
+    """
+    Used to get IDs and corresponding IP addresses of clients nearby (threshold
+    can be updated in config file).
+
+    :param id: Current client's ID.
+    :return:   Dictionary containing IDs as keys, and IP addresses as values.
+    """
     client_id = request.form.get("id")
     users     = User.query.filter(User.id != client_id).all()
 
-    # # TODO: Temporarily return all other users (broadcast).
+    # TODO: Temporarily return all other users (broadcast).
     return jsonify({c.id : c.ip_address for c in users})
 
 
 @actions.route("/move", methods=["POST"], strict_slashes=False)
 def move() :
+    """
+    Takes new position supplied by user and validates that the move satisfies:
+        - Within board bounds
+        - Moves to free space
+        - Moves a total of one unit in any direction (Need to allow for no movement)
+    Sensor data returned:
+        - If move successful, return data of new surroundings.
+        - If move unsccessful, return updated data surroundings about original position.
+
+    :param client_id:  Current client's ID
+    :param position_x: New x-position
+    :param position_y: New y-position
+    :return:           Return bool value indicating success status of movement, along
+                       with sensor information of spaces adjacent to new position.
+    """
     client_id  = request.form.get("id")
     position_x = request.form.get("position_x")
     position_y = request.form.get("position_y")

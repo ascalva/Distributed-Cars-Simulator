@@ -1,9 +1,10 @@
 from random            import randint
+from typing            import Tuple, Dict
 from src.server        import db, app
 from src.server.models import User, Obstacle
 
 
-def is_empty(x, y) :
+def is_empty(x: int, y: int) -> bool :
     users = db.session.query(User) \
         .filter(User.position_x == x) \
         .filter(User.position_y == y) \
@@ -14,10 +15,10 @@ def is_empty(x, y) :
         .filter(Obstacle.position_y == y) \
         .first()
 
-    return None not in (users, obstacles)
+    return (users is None) and (obstacles is None)
 
 
-def get_empty_space() :
+def get_empty_space() -> Tuple[int, int]:
     board_height, board_width = app.config["BOARD_DIMS"]
 
     # Keep generating new position until an empty space is found.
@@ -31,9 +32,20 @@ def get_empty_space() :
     return (x, y)
 
 
-def proper_move(x_old, y_old, x_new, y_new) :
+def proper_move(x_old: int, y_old: int, x_new: int, y_new: int) -> bool :
     dx = abs(x_new - x_old)
     dy = abs(y_new - y_old)
 
+    # TODO: Needs to allow for zero movement.
     return (dx != dy) and (dx + dy == 1)
+
+
+def get_sensor_data(x: int, y: int) -> Dict[str, bool]:
+    return {
+        "left"  : is_empty(x-1, y),
+        "right" : is_empty(x+1, y),
+        "up"    : is_empty(x, y-1),
+        "down"  : is_empty(x, y+1)
+    }
+
 

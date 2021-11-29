@@ -4,16 +4,27 @@ import os
 import json
 
 class Car :
-    def __init__(self, name, server_hostname, server_port) :
+    """
+    A Car object should be able to move along a simulated board and interact with the
+    environment. The environment is simulated by a centralized server, which helps
+    simulate distance by providing a car's neighbors. Communication and coordination
+    between cars does not involve server.
+    """
+
+    def __init__(self, name: str, server_hostname: str, server_port: str) -> None :
         self.name        = name
         self.server_host = server_hostname
         self.server_port = server_port
-        self.neighbors   = {}
         self.position    = []
+        self.neighbors   = {}
         self.env         = {}
 
 
     def login(self) :
+        """
+        Establish "connection" with simulator (server) and get car position
+        along the board.
+        """
         res = requests.post(
             f"http://{self.server_host}:{self.server_port}/actions/login",
             data = {"id" : self.name}
@@ -28,6 +39,10 @@ class Car :
 
 
     def getNeighbors(self) :
+        """
+        Get current car neighbors (threshold determined by server) and their
+        corresponding IP addresses.
+        """
         res = requests.post(
             f"http://{self.server_host}:{self.server_port}/actions/getNeighbors",
             data = {"id" : self.name}
@@ -40,6 +55,12 @@ class Car :
 
 
     def move(self) :
+        """
+        Attempt a move to a new position. Should utilize sensor data, objective,
+        (and history) to determine the next move. Sensor data is always returned:
+            - If move is successful, gets data about new surroundings.
+            - If move is unsuccessful, gets updated data about current surroundings.
+        """
         # TODO: Do proper moves.
         data = {
             "id" : self.name,
