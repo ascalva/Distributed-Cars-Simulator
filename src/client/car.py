@@ -2,6 +2,10 @@ import requests
 import time
 import os
 import json
+import threading
+import socket
+import struct
+import ast
 
 class Car :
     """
@@ -10,6 +14,7 @@ class Car :
     simulate distance by providing a car's neighbors. Communication and coordination
     between cars does not involve server.
     """
+    
 
     def __init__(self, name: str, server_hostname: str, server_port: str) -> None :
         self.name        = name
@@ -18,6 +23,10 @@ class Car :
         self.position    = []
         self.neighbors   = {}
         self.env         = {}
+        self.MCAST_GRP = '224.1.1.1'
+        self.MCAST_PORT = 5000
+        self.MULTICAST_TTL = 2
+
 
 
     def login(self) :
@@ -78,28 +87,82 @@ class Car :
 
         data        = json.loads(res.content)
         success     = data["success"]
-        sensor_data = data["sensor_data"]
+        
 
-        if success :
-            self.env = sensor_data
-            print(self.env)
+    def processNeighborMessage(self, clientAddress, clientSocket):
+        message = clientSocket.recv(2048)
+        data = message.decode('utf-8')
+        res = ast.literal_eval(data)
 
+        if(res["type"] == "REQUEST"):
+            message = {
+            "type" : "RESPONSE",
+            "from" : self.name,
+            "to" : res["from"],
+            "position" : self.position
+            }
+            replyThread = threading.Thread(target=self.sender, args=(str(message), res["from"]))
+            replyThread.start()
+        else:            
+            self.env[res["from"]] = res["position"]
+            print("ENV = " + str(self.env))
+
+    def receiver(self):
+        print("STARTED RECEIVER FOR : " + self.name )
+        PORT = 5002
+        rcv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        rcv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        rcv.bind(('', PORT))
+        while True:
+            rcv.listen(2)
+            clientsock, clientAddress = rcv.accept()
+            processThread = threading.Thread(target=self.processNeighborMessage, args=(clientAddress,clientsock))
+            processThread.start()
+
+
+    def sender(self, message, clientId):
+        PORT = 5002
+        sndr = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sndr.connect((clientId, PORT))
+        sndr.send(bytes(message,'UTF-8'))
+        sndr.close()
+
+
+    def sendNeighborsMessage(self):
+        time.sleep(10)
+        for neighbor in self.neighbors.keys():
+            message = {
+            "type" : "REQUEST",
+            "from" : self.name,
+            "to" : neighbor
+            }
+
+            t = threading.Thread(target=self.sender, args=(str(message), neighbor))
+            t.start()
+        
+    def updateEnvironment(self):
+        for client in self.env.keys():
+            if client not in self.neighbors.keys():
+                del self.env[client]
+        
 
     def run(self) :
+        
+        t = threading.Thread(target=self.receiver, args=())
+        t.start()
         while True :
 
-            # Main execution, do something
-            # Actions include :
-            #   - get neighbors
-            #   - move
-            #   - communicate with neighbors
-            #   - use sensor info
-            if self.name == "client-1" :
-                self.getNeighbors()
-
-
+                # Main execution, do something
+                # Actions include :
+                #   - get neighbors
+                #   - move
+                #   - communicate with neighbors
+                #   - use sensor info
+                # if self.name == "client-1" :
+            self.getNeighbors()
+            self.updateEnvironment()
+            self.sendNeighborsMessage()
             time.sleep(10)
-            pass
 
 
 if __name__ == "__main__" :
@@ -107,6 +170,7 @@ if __name__ == "__main__" :
         "name"            : os.environ.get("CLIENT_ID"),
         "server_hostname" : os.environ.get("HOSTNAME"),
         "server_port"     : os.environ.get("PORT")
+
     }
 
     print("Creating object")

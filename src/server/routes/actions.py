@@ -2,7 +2,7 @@ from flask             import Blueprint, jsonify, request
 from flask_login       import current_user, login_user, logout_user, login_required
 from src.server        import app, db
 from src.server.models import User, Obstacle
-from .environment      import *
+from .environment      import get_empty_space
 
 
 actions = Blueprint("actions", __name__, url_prefix="/actions")
@@ -33,10 +33,6 @@ def client_login() :
         message = "Created user."
 
     else:
-        # User might have new IP address since last signin.
-        u.updateIP(client_ip)
-        db.session.commit()
-
         pos     = u.position
         message = "User already exists."
 
@@ -86,22 +82,12 @@ def move() :
     client_id  = request.form.get("id")
     position_x = request.form.get("position_x")
     position_y = request.form.get("position_y")
-
-    u            = User.query.filter(User.id == client_id).first()
-    x_old, y_old = u.position
-
-    # TODO: Add proper lock.
-    # Make sure move is valid.
-    if proper_move(x_old, y_old, position_x, position_y) :
-        u.setPosition(position_x, position_y)
-        db.session.commit()
-
-    # Get latest position, old if move failed, new otherwise.
-    pos = u.position
-
-    # Return sensor data, regardless of success
+    message = "Noted new position."
     return jsonify({
-        "data"     : get_sensor_data(*pos),
-        "position" : pos
-    })
+        "success"     : "Success",
+        "message"    : message
+        })
+
+    # TODO: Return sensor info.
+
 

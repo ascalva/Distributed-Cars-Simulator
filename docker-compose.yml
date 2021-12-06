@@ -71,6 +71,24 @@ services:
         networks:
             - local_net
 
+    client-3:
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker-files/Dockerfile.client
+        container_name: client-3
+        image: client-3
+        command: sh -c "sleep 8; python3 src/client/car.py"
+        volumes:
+            - ./:/app
+        environment:
+            CLIENT_ID: client-3
+            HOSTNAME:  simulator
+            PORT:      5000
+        tty: true
+        networks:
+            - local_net
+
 networks:
     local_net:
         external: false
