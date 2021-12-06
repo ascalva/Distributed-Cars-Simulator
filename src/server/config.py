@@ -20,4 +20,4 @@ class Config(object) :
     # Simulation parameters.
     COMMUNICATION_LIMIT = 2
 
-    BOARD_DIMS = (10, 10)
+    BOARD_DIMS = (100, 100)
