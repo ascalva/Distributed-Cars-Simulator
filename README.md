@@ -10,3 +10,7 @@ Simulator's dashboard can be seen at: `http://localhost:5000`. Containers can be
 ```
 docker-compose -f docker-compose.yml down
 ```
+
+System Architecture
+![](https://github.com/ascalva/Distributed-Cars-Simulator/blob/58699722615c62754c65a588002c808fef69d878/Report/system_architecture.png)
+
