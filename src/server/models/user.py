@@ -18,6 +18,9 @@ class User(UserMixin, db.Model) :
         self.position_x = x
         self.position_y = y
 
+    def updateIP(self, ip_address) :
+        self.ip_address = ip_address
+
     @hybrid_property
     def position(self) :
         return (self.position_x, self.position_y)
