@@ -2,6 +2,8 @@ from src.server            import db, login
 from flask_login           import UserMixin
 from sqlalchemy.ext.hybrid import hybrid_property
 
+import numpy as np
+
 class User(UserMixin, db.Model) :
     id         = db.Column(db.String(128), primary_key=True)
     ip_address = db.Column(db.String(16), nullable=False)
@@ -24,6 +26,10 @@ class User(UserMixin, db.Model) :
     @hybrid_property
     def position(self) :
         return (self.position_x, self.position_y)
+
+    @hybrid_property
+    def position_(self) :
+        return np.array([self.position_x, self.position_y])
 
 
 @login.user_loader

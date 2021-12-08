@@ -4,6 +4,8 @@ from src.server        import app, db
 from src.server.models import User, Obstacle
 from .environment      import *
 
+import numpy as np
+
 
 actions = Blueprint("actions", __name__, url_prefix="/actions")
 
@@ -59,11 +61,18 @@ def getNeighbors() :
     :param id: Current client's ID.
     :return:   Dictionary containing IDs as keys, and IP addresses as values.
     """
+
     client_id = request.form.get("id")
+    current   = User.query.filter(User.id == client_id).first()
     users     = User.query.filter(User.id != client_id).all()
 
+    curr_pos  = current.position_
+
+    def dist(u) :
+        return np.linalg.norm(u.position_ - curr_pos) <= app.config["COMMUNICATION_LIMIT"]
+
     # TODO: Temporarily return all other users (broadcast).
-    return jsonify({c.id : c.ip_address for c in users})
+    return jsonify({c.id : c.ip_address for c in filter(dist, users)})
 
 
 @actions.route("/move", methods=["POST"], strict_slashes=False)
