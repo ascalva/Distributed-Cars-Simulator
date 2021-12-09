@@ -86,11 +86,17 @@ def randomly_populate() -> None :
     Randomly populate board with n-number of obstacles, where n is defined
     as INITIAL_OBSTACLE_NUM in the config file.
     """
-    for _ in range(app.config["INITIAL_OBSTACLE_NUM"]) :
-        x, y = get_empty_space()
-        o    = Obstacle(x,y)
 
-        db.session.add(o)
+    # Number of current obstacles.
+    n = app.config["INITIAL_OBSTACLE_NUM"]
 
-    db.session.commit()
+    if Obstacle.query.count() < n :
+
+        for _ in range(n) :
+            x, y = get_empty_space()
+            o    = Obstacle(x,y)
+
+            db.session.add(o)
+
+        db.session.commit()
 
