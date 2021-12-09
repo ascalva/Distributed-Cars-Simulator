@@ -81,3 +81,16 @@ def get_sensor_data(x: int, y: int) -> Dict[str, bool]:
     }
 
 
+def randomly_populate() -> None :
+    """
+    Randomly populate board with n-number of obstacles, where n is defined
+    as INITIAL_OBSTACLE_NUM in the config file.
+    """
+    for _ in range(app.config["INITIAL_OBSTACLE_NUM"]) :
+        x, y = get_empty_space()
+        o    = Obstacle(x,y)
+
+        db.session.add(o)
+
+    db.session.commit()
+
