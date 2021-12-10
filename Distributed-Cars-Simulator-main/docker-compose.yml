@@ -1,0 +1,256 @@
+version: "3.1"
+
+services:
+    sim-database:
+        image: postgres:latest
+        container_name: sim-database
+        restart: always
+        environment:
+            POSTGRES_PASSWORD: mysecretpassword
+            POSTGRES_DB: simulator-database
+        tty: true
+        networks:
+            - local_net
+
+    simulator:
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker-files/Dockerfile
+        container_name: simulator
+        image: simulator
+        ports:
+            - "5000:5000"
+        volumes:
+            - ./:/app
+        environment:
+            RDS_ENGINE:   postgresql
+            RDS_HOSTNAME: sim-database
+            RDS_USERNAME: postgres
+            RDS_PASSWORD: mysecretpassword
+            RDS_PORT:     5432
+            RDS_DB_NAME:  simulator-database
+        tty:
+            true
+        networks:
+            - local_net
+
+    client-1:
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker-files/Dockerfile.client
+        container_name: client-1
+        image: client-1
+        command: sh -c "sleep 1; python3 src/client/car.py"
+        volumes:
+            - ./:/app
+        environment:
+            CLIENT_ID: client-1
+            HOSTNAME:  simulator
+            PORT:      5000
+        tty: true
+        networks:
+            - local_net
+
+    client-2:
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker-files/Dockerfile.client
+        container_name: client-2
+        image: client-2
+        command: sh -c "sleep 2; python3 src/client/car.py"
+        volumes:
+            - ./:/app
+        environment:
+            CLIENT_ID: client-2
+            HOSTNAME:  simulator
+            PORT:      5000
+        tty: true
+        networks:
+            - local_net
+
+    client-3:
+        restart: always
+        build:
+            context: .
+            dockerfile: ./docker-files/Dockerfile.client
+        container_name: client-3
+        image: client-3
+        command: sh -c "sleep 3; python3 src/client/car.py"
+        volumes:
+            - ./:/app
+        environment:
+            CLIENT_ID: client-3
+            HOSTNAME:  simulator
+            PORT:      5000
+        tty: true
+        networks:
+            - local_net
+
+    # client-4:
+    #     restart: always
+    #     build:
+    #         context: .
+    #         dockerfile: ./docker-files/Dockerfile.client
+    #     container_name: client-4
+    #     image: client-4
+    #     command: sh -c "sleep 2; python3 src/client/car.py"
+    #     volumes:
+    #         - ./:/app
+    #     environment:
+    #         CLIENT_ID: client-4
+    #         HOSTNAME:  simulator
+    #         PORT:      5000
+    #     tty: true
+    #     networks:
+    #         - local_net
+
+    # client-5:
+    #     restart: always
+    #     build:
+    #         context: .
+    #         dockerfile: ./docker-files/Dockerfile.client
+    #     container_name: client-5
+    #     image: client-5
+    #     command: sh -c "sleep 3; python3 src/client/car.py"
+    #     volumes:
+    #         - ./:/app
+    #     environment:
+    #         CLIENT_ID: client-5
+    #         HOSTNAME:  simulator
+    #         PORT:      5000
+    #     tty: true
+    #     networks:
+    #         - local_net
+
+    # client-6:
+    #     restart: always
+    #     build:
+    #         context: .
+    #         dockerfile: ./docker-files/Dockerfile.client
+    #     container_name: client-6
+    #     image: client-6
+    #     command: sh -c "sleep 1; python3 src/client/car.py"
+    #     volumes:
+    #         - ./:/app
+    #     environment:
+    #         CLIENT_ID: client-6
+    #         HOSTNAME:  simulator
+    #         PORT:      5000
+    #     tty: true
+    #     networks:
+    #         - local_net
+
+    # client-7:
+    #     restart: always
+    #     build:
+    #         context: .
+    #         dockerfile: ./docker-files/Dockerfile.client
+    #     container_name: client-7
+    #     image: client-7
+    #     command: sh -c "sleep 1; python3 src/client/car.py"
+    #     volumes:
+    #         - ./:/app
+    #     environment:
+    #         CLIENT_ID: client-7
+    #         HOSTNAME:  simulator
+    #         PORT:      5000
+    #     tty: true
+    #     networks:
+    #         - local_net
+
+    # client-8:
+    #     restart: always
+    #     build:
+    #         context: .
+    #         dockerfile: ./docker-files/Dockerfile.client
+    #     container_name: client-8
+    #     image: client-8
+    #     command: sh -c "sleep 2; python3 src/client/car.py"
+    #     volumes:
+    #         - ./:/app
+    #     environment:
+    #         CLIENT_ID: client-8
+    #         HOSTNAME:  simulator
+    #         PORT:      5000
+    #     tty: true
+    #     networks:
+    #         - local_net
+
+    # client-9:
+    #     restart: always
+    #     build:
+    #         context: .
+    #         dockerfile: ./docker-files/Dockerfile.client
+    #     container_name: client-9
+    #     image: client-9
+    #     command: sh -c "sleep 3; python3 src/client/car.py"
+    #     volumes:
+    #         - ./:/app
+    #     environment:
+    #         CLIENT_ID: client-9
+    #         HOSTNAME:  simulator
+    #         PORT:      5000
+    #     tty: true
+    #     networks:
+    #         - local_net
+
+    # client-10:
+    #     restart: always
+    #     build:
+    #         context: .
+    #         dockerfile: ./docker-files/Dockerfile.client
+    #     container_name: client-10
+    #     image: client-10
+    #     command: sh -c "sleep 2; python3 src/client/car.py"
+    #     volumes:
+    #         - ./:/app
+    #     environment:
+    #         CLIENT_ID: client-10
+    #         HOSTNAME:  simulator
+    #         PORT:      5000
+    #     tty: true
+    #     networks:
+    #         - local_net
+
+    # client-11:
+    #     restart: always
+    #     build:
+    #         context: .
+    #         dockerfile: ./docker-files/Dockerfile.client
+    #     container_name: client-11
+    #     image: client-11
+    #     command: sh -c "sleep 3; python3 src/client/car.py"
+    #     volumes:
+    #         - ./:/app
+    #     environment:
+    #         CLIENT_ID: client-11
+    #         HOSTNAME:  simulator
+    #         PORT:      5000
+    #     tty: true
+    #     networks:
+    #         - local_net
+
+    # client-12:
+    #     restart: always
+    #     build:
+    #         context: .
+    #         dockerfile: ./docker-files/Dockerfile.client
+    #     container_name: client-12
+    #     image: client-12
+    #     command: sh -c "sleep 1; python3 src/client/car.py"
+    #     volumes:
+    #         - ./:/app
+    #     environment:
+    #         CLIENT_ID: client-12
+    #         HOSTNAME:  simulator
+    #         PORT:      5000
+    #     tty: true
+    #     networks:
+    #         - local_net
+
+networks:
+    local_net:
+        external: false
