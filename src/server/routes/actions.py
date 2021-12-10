@@ -5,8 +5,7 @@ from src.server.models import User, Obstacle
 from .environment      import *
 
 import numpy as np
-import threading
-
+import pickle
 
 actions = Blueprint("actions", __name__, url_prefix="/actions")
 
@@ -46,11 +45,11 @@ def client_login() :
     # Login user.
     login_user(u)
 
-    return jsonify({
+    return {
         "status"     : "ok",
         "message"    : message,
         "position"   : list(pos)
-    })
+    }
 
 
 @actions.route("/getNeighbors", methods=["GET", "POST"], strict_slashes=False)
@@ -62,18 +61,30 @@ def getNeighbors() :
     :param id: Current client's ID.
     :return:   Dictionary containing IDs as keys, and IP addresses as values.
     """
-
     client_id = request.form.get("id")
     current   = User.query.filter(User.id == client_id).first()
     users     = User.query.filter(User.id != client_id).all()
 
     curr_pos  = current.position_
-
+    
     def dist(u) :
         return np.linalg.norm(u.position_ - curr_pos) <= app.config["COMMUNICATION_LIMIT"]
 
-    # TODO: Temporarily return all other users (broadcast).
-    return jsonify({c.id : c.ip_address for c in filter(dist, users)})
+    neighbors = {c.id : c.ip_address for c in filter(dist, users)}
+
+    obstacles = Obstacle.query.all()
+    count = 1
+    for u in users:
+        neighbors[u.id] = u.position
+        
+    for ob in obstacles:
+        neighbors["obstacle" + str(count)] = ob.position
+        count += 1
+
+    return {
+        "id" : client_id,
+        "neighbors" : neighbors
+    }
 
 
 @actions.route("/move", methods=["POST"], strict_slashes=False)
@@ -93,31 +104,32 @@ def move() :
     :return:           Return bool value indicating success status of movement, along
                        with sensor information of spaces adjacent to new position.
     """
-
     board_height, board_width = app.config["BOARD_DIMS"]
     client_id  = request.form.get("id")
     position_x = int(request.form.get("position_x"))
     position_y = int(request.form.get("position_y"))
+    # obstacleBlock = False
 
     u            = User.query.filter(User.id == client_id).first()
     x_old, y_old = u.position
 
     # Make sure move is valid.
-    if position_x >= board_width:
-        position_x = board_width
-    if position_y >= board_height:
-        position_y = board_height
+    if position_x > board_width + 1:
+        position_x = 0
+    elif position_x < 0:
+        position_x = board_width + 1
+    if position_y > board_height + 1:
+        position_y = 0
+    elif position_y < 0:
+        position_y = board_height + 1
 
     # Set Position
     u.setPosition(position_x, position_y)
     db.session.commit()
 
-    # Get latest position, old if move failed, new otherwise.
-    pos = u.position
-
     # Return sensor data, regardless of success
-    return jsonify({
-        "data"     : get_sensor_data(*pos),
-        "position" : pos
-    })
-
+    return {
+        "data"          : get_sensor_data(*u.position),
+        "position_x"      : u.position[0],
+        "position_y"      : u.position[1]
+    }

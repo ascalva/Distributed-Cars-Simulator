@@ -17,17 +17,28 @@ class Car :
     """
 
     def __init__(self, name: str, server_hostname: str, server_port: str) -> None :
-        self.name        = name
-        self.server_host = server_hostname
-        self.server_port = server_port
-        self.position    = []
-        self.neighbors   = {}
-        self.env         = {}
-        possibleDirections = [[1, 0], [-1, 0]] #, [0, 1], [0, -1]]
-        self.direction   = possibleDirections[random.randint(0, 1)] # 3)]
-        self.MCAST_GRP = '224.1.1.1'
-        self.MCAST_PORT = 5000
-        self.MULTICAST_TTL = 2
+        self.name               = name
+        self.server_host        = server_hostname
+        self.server_port        = server_port
+        self.position           = []
+        self.neighbors          = {}
+        self.env                = {}
+        self.obstacles          = []
+        possibleDirections      = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+        possibleAdjust          = [[0, 1], [0, -1], [0, 1], [0, -1]] 
+        randomInit              = random.randint(0, 1) # 3)
+        self.direction          = possibleDirections[randomInit]
+        self.adjust             = possibleAdjust[randomInit]
+        self.MCAST_GRP          = '224.1.1.1'
+        self.MCAST_PORT         = 5000
+        self.MULTICAST_TTL      = 2
+        self.obstacleBlock      = False
+        self.legalMove          = True
+        self.collisionRight     = False
+        self.collisionLeft      = False
+        self.obstacleRightBlock = False
+        self.obstacleLeftBlock  = False
+
 
     def login(self) :
         """
@@ -49,18 +60,28 @@ class Car :
 
     def getNeighbors(self) :
         """
-        Get current car neighbors (threshold determined by server) and their
-        corresponding IP addresses.
+        Get current car neighbors (threshold determined by server), their
+        corresponding IP addresses and the location of all obstacles in view.
         """
+
         res = requests.post(
             f"http://{self.server_host}:{self.server_port}/actions/getNeighbors",
-            data = {"id" : self.name}
+            data = {
+                "id"        : self.name,
+                "neighbors" : {}
+            }
         )
 
         if not res.ok :
             print("!! Error: Unable to get neighbors.")
 
-        self.neighbors = json.loads(res.content)
+        data = json.loads(res.content)
+
+        for entry in data["neighbors"].keys():
+            if entry.startswith('o'):
+                self.obstacles.append(data["neighbors"][entry])
+            else:
+                self.env[entry] = data["neighbors"][entry]
 
 
     def move(self) :
@@ -70,44 +91,60 @@ class Car :
             - If move is successful, gets data about new surroundings.
             - If move is unsuccessful, gets updated data about current surroundings.
         """
-        # TODO: Do proper moves.
-        adjust = [0, 0]
-        legalMove = True
-        collisionAvoidance = True
+
+        for obstacle in self.obstacles:
+            if obstacle[0] == self.position[0] + self.direction[0] and \
+               obstacle[1] == self.position[1] + self.direction[1]:
+               self.obstacleBlock = True
 
         for neighbor in self.env.keys():
-            if (self.env[neighbor][0][0] + self.env[neighbor][1][0] == self.position[0] + self.direction[0] and 
-             self.env[neighbor][0][1] + self.env[neighbor][1][1] == self.position[1] + self.direction[1]):
-                legalMove = False
-            elif (self.env[neighbor][0][0] + self.env[neighbor][1][0] * 2 == self.position[0] + self.direction[0] * 2 and 
-             self.env[neighbor][0][1] + self.env[neighbor][1][1] * 2 == self.position[1] + self.direction[1] * 2):
-                legalMove = False
-            elif (self.env[neighbor][0][0] == self.position[0] + self.direction[0] * 2 and 
-             self.env[neighbor][0][1] == self.position[1] + self.direction[1] * 2):
-                legalMove = False
+            if self.env[neighbor][0] == self.position[0] + self.direction[0] and \
+               self.env[neighbor][1] == self.position[1] + self.direction[1]:
+                time.sleep(3)
+                self.legalMove = False
 
-        if legalMove:
+        if self.legalMove and not self.obstacleBlock:
             self.position[0] += self.direction[0]
             self.position[1] += self.direction[1]
+            self.obstacleLeftBlock  = False
+            self.obstacleRightBlock = False
+            self.collisionLeft  = False
+            self.collisionRight = False
         else:
-            if self.direction == [1, 0]:
-                adjust = [0, 1]
-            elif self.direction == [-1, 0]:
-                adjust = [0, -1]
-            elif self.direction == [0, 1]:
-                adjust = [-1, 0]
-            elif self.direction == [0, -1]:
-                adjust = [1, 0]
             for neighbor in self.env.keys():
-                if ((self.env[neighbor][0][0] + self.env[neighbor][1][0] == self.position[0] + adjust[0] and 
-                 self.env[neighbor][0][1] + self.env[neighbor][1][1] == self.position[1] + adjust[1] ) or 
-                 (self.env[neighbor][0][0] == self.position[0] + adjust[0] and 
-                 self.env[neighbor][0][1] == self.position[1] + adjust[1])):
-                    collisionAvoidance = False
+                if self.env[neighbor][0] == self.position[0] + self.adjust[0] and \
+                   self.env[neighbor][1] == self.position[1] + self.adjust[1]:
+                    self.collisionRight = True
+                    break
+                elif self.env[neighbor][0] == self.position[0] - self.adjust[0] and \
+                     self.env[neighbor][1] == self.position[1] - self.adjust[1]:
+                    self.collisionRight = True
+                    break
+    
+            for obstacle in self.obstacles:
+                if obstacle[0] == self.position[0] + self.adjust[0] and \
+                   obstacle[1] == self.position[1] + self.adjust[1]:
+                    self.obstacleRightBlock = True
+                    break
+                elif obstacle[0] == self.position[0] - self.adjust[0] and \
+                     obstacle[1] == self.position[1] - self.adjust[1]:
+                    self.obstacleLeftBlock = True
+                    break
 
-        if collisionAvoidance:
-            self.position[0] += adjust[0]
-            self.position[1] += adjust[1]
+        if (self.obstacleBlock or not self.legalMove) and not self.obstacleRightBlock and not self.collisionRight:
+            self.position[0]   += self.adjust[0]
+            self.position[1]   += self.adjust[1]
+            self.obstacleBlock =  False
+            self.legalMove     =  True
+        elif (self.obstacleBlock or not self.legalMove) and not self.obstacleLeftBlock and not self.collisionLeft:
+            self.position[0]   -= self.adjust[0]
+            self.position[1]   -= self.adjust[1]
+            self.obstacleBlock =  False
+            self.legalMove     =  True
+        elif (self.obstacleBlock and self.obstacleLeftBlock and self.obstacleRightBlock) or \
+             (not self.legalMove and self.obstacleLeftBlock and self.obstacleRightBlock):
+            self.position[0]   -= self.direction[0]
+            self.position[1]   -= self.direction[1]
 
         data = {
             "id" : self.name,
@@ -123,8 +160,10 @@ class Car :
         if not res.ok :
             print("!! Error: Unable to move.")
 
-        data        = json.loads(res.content)
-        #success     = data["success"]
+        data = json.loads(res.content)
+        self.position[0]    = data["position_x"]
+        self.position[1]    = data["position_y"]
+        
 
     def processNeighborMessage(self, clientAddress, clientSocket):
         message = clientSocket.recv(2048)
@@ -136,13 +175,12 @@ class Car :
             "type" : "RESPONSE",
             "from" : self.name,
             "to" : res["from"],
-            "position" : self.position,
-            "direction" : self.direction
+            "position" : self.position
             }
             replyThread = threading.Thread(target=self.sender, args=(str(message), res["from"]))
             replyThread.start()
-        else:
-            self.env[res["from"]] = (self.position, self.direction) #(res["position"], res["direction"])
+        else:            
+            self.env[res["from"]] = res["position"]
             print("ENV = " + str(self.env))
 
     def receiver(self):
@@ -167,7 +205,7 @@ class Car :
 
 
     def sendNeighborsMessage(self):
-        time.sleep(1)
+        time.sleep(2)
         for neighbor in self.neighbors.keys():
             message = {
             "type" : "REQUEST",
@@ -180,22 +218,21 @@ class Car :
         
     def updateEnvironment(self):
         for client in self.env.keys():
-            if client not in self.neighbors.keys():
-                del self.env[client]
+            pass
+            """
+            The execution of the following code demonstrates how cars would lose sight of each other
+            in much larger environments when the cars leave the current grid. This environment is small
+            enough to allow these cars to always maintain communication with each other
+            """
+            # if client not in self.neighbors.keys():
+            #     del self.env[client]
         
 
     def run(self) :
+        
         t = threading.Thread(target=self.receiver, args=())
         t.start()
         while True :
-
-                # Main execution, do something
-                # Actions include :
-                #   - get neighbors
-                #   - move
-                #   - communicate with neighbors
-                #   - use sensor info
-                # if self.name == "client-1" :
             self.getNeighbors()
             self.updateEnvironment()
             self.sendNeighborsMessage()
@@ -204,9 +241,6 @@ class Car :
 
 
 if __name__ == "__main__" :
-    # count = threading.active_count()
-    # time.sleep(2)
-
     params = {
         "name"            : os.environ.get("CLIENT_ID"),
         "server_hostname" : os.environ.get("HOSTNAME"),
@@ -216,16 +250,8 @@ if __name__ == "__main__" :
     print("Creating object")
     c = Car(**params)
 
-    # lock = threading.Lock()
-
-    # lock.acquire()
     print("Loging in")
     c.login()
-    # lock.release()
-
-    # while threading.active_count() > count:
-    #     pass
 
     print("Run main function.")
     c.run()
-

@@ -37,22 +37,17 @@ def skeletonView() :
 
     board_height, board_width = app.config["BOARD_DIMS"]
 
-    board = np.chararray((board_height+1, board_width+1), unicode=True).astype(str)
+    board = np.chararray((board_height+2, board_width+2), unicode=True).astype(str)
     board[:] = "+"
 
     for c in users :
         x,y = c.position
-        if not (x <= 0 or x > board_width + 1 or y <= 0 or y > board_height + 1):
-            board[y, x] = "🚙"
+        board[x, y] = "🚙"
 
     for o in obstacles :
         x, y = o.position
-        board[y, x] = "█"
+        board[x, y] = "█"
 
-    for x in range(0, board_width):
-        for y in range(0, board_height):
-            if x == board_width or y == board_height:
-                board[y, x] = " "
 
     boardv = ["&nbsp;&nbsp;&nbsp;&nbsp;".join(row) for row in board]
     boardv = "<br>".join(boardv)

@@ -18,6 +18,6 @@ class Config(object) :
         f"{RDS_ENGINE}://{RDS_USERNAME}:{RDS_PASSWORD}@{RDS_HOSTNAME}:{RDS_PORT}/{RDS_DB_NAME}"
 
     # Simulation parameters.
-    COMMUNICATION_LIMIT = 10.0
-
-    BOARD_DIMS = (10, 10)
+    COMMUNICATION_LIMIT  = 10.0
+    INITIAL_OBSTACLE_NUM = 14 # 20
+    BOARD_DIMS           = (15, 15)

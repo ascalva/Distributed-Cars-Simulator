@@ -36,37 +36,14 @@ def get_empty_space() -> Tuple[int, int]:
 
     # Keep generating new position until an empty space is found.
     while True :
-        y = randint(0, board_height)
-        x = randint(0, board_width)
+        y = randint(1, board_height)
+        # x = randint(1, board_width)
+        x = 10
 
         if is_empty(x, y) :
             break
 
     return (x, y)
-
-
-# def proper_move(x_old: int, y_old: int, x_new: int, y_new: int) -> bool :
-#     """
-#     Check if car move is accepted, must satisfy:
-#         - Car only moves one unit in one direction.
-#         - Car is within boundary.
-
-#     :param x_old: Old x-position.
-#     :param y_old: Old y-position.
-#     :param x_new: New x-position.
-#     :param y_new: New y-position.
-#     :return:      Boolean indicating if move is possible.
-#     """
-#     board_height, board_width = app.config["BOARD_DIMS"]
-
-#     if x_new > 0 or x_new < board_width + 1 or y_new > 0 or y_new < board_height + 1:
-#         return False
-
-#     dx = abs(x_new - x_old)
-#     dy = abs(y_new - y_old)
-
-#     # Can only displace a max of one unit in one direction.
-#     return True #(dx == 1 and dy == 0) or (dx == 0 and dy ==1)
 
 
 def get_sensor_data(x: int, y: int) -> Dict[str, bool]:
@@ -84,4 +61,23 @@ def get_sensor_data(x: int, y: int) -> Dict[str, bool]:
         "down"  : not is_empty(x, y+1)
     }
 
+
+def randomly_populate() -> None :
+    """
+    Randomly populate board with n-number of obstacles, where n is defined
+    as INITIAL_OBSTACLE_NUM in the config file.
+    """
+
+    # Number of current obstacles.
+    n = app.config["INITIAL_OBSTACLE_NUM"]
+
+    if Obstacle.query.count() < n :
+
+        for _ in range(n) :
+            x, y = get_empty_space()
+            o    = Obstacle(x,y)
+
+            db.session.add(o)
+
+        db.session.commit()
 
