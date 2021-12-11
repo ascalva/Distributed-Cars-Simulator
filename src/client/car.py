@@ -26,7 +26,7 @@ class Car :
         self.obstacles          = []
         possibleDirections      = [[1, 0], [-1, 0], [0, 1], [0, -1]]
         possibleAdjust          = [[0, 1], [0, -1], [0, 1], [0, -1]] 
-        randomInit              = random.randint(0, 1) # 3)
+        randomInit              = random.randint(0, 3)
         self.direction          = possibleDirections[randomInit]
         self.adjust             = possibleAdjust[randomInit]
         self.MCAST_GRP          = '224.1.1.1'

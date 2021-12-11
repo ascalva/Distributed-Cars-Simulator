@@ -19,5 +19,5 @@ class Config(object) :
 
     # Simulation parameters.
     COMMUNICATION_LIMIT  = 10.0
-    INITIAL_OBSTACLE_NUM = 14 # 20
+    INITIAL_OBSTACLE_NUM = 20
     BOARD_DIMS           = (15, 15)

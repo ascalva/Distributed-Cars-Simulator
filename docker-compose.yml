@@ -42,7 +42,7 @@ services:
             dockerfile: ./docker-files/Dockerfile.client
         container_name: client-1
         image: client-1
-        command: sh -c "sleep 1.4; python3 src/client/car.py"
+        command: sh -c "sleep 3; python3 src/client/car.py"
         volumes:
             - ./:/app
         environment:
@@ -60,7 +60,7 @@ services:
             dockerfile: ./docker-files/Dockerfile.client
         container_name: client-2
         image: client-2
-        command: sh -c "sleep 1.5; python3 src/client/car.py"
+        command: sh -c "sleep 5; python3 src/client/car.py"
         volumes:
             - ./:/app
         environment:
@@ -78,7 +78,7 @@ services:
             dockerfile: ./docker-files/Dockerfile.client
         container_name: client-3
         image: client-3
-        command: sh -c "sleep 1.6; python3 src/client/car.py"
+        command: sh -c "sleep 7; python3 src/client/car.py"
         volumes:
             - ./:/app
         environment:

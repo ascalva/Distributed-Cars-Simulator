@@ -37,8 +37,7 @@ def get_empty_space() -> Tuple[int, int]:
     # Keep generating new position until an empty space is found.
     while True :
         y = randint(1, board_height)
-        # x = randint(1, board_width)
-        x = 10
+        x = randint(1, board_width)
 
         if is_empty(x, y) :
             break
